@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  #######################################
+  # Elasticsearch
+  #######################################
+  {DOMAIN_NAME}-elasticsearch:
+    container_name: {DOMAIN_NAME}-elasticsearch
+    build: 
+      context: elasticsearch/
+      dockerfile: Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      VIRTUAL_HOST : ${VIRTUAL_HOST}
+      VIRTUAL_PORT: 9200
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - {DOMAIN_NAME}-elasticsearch_data:/usr/share/elasticsearch/data:Z
+    ports:
+      - "${ELASTIC_PORT}:9200"
+    restart: always
+
+  #######################################
+  # Kibana
+  #######################################
+  {DOMAIN_NAME}-kibana:
+    container_name: {DOMAIN_NAME}-kibana
+    build: 
+      context: kibana/
+      dockerfile: Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    environment:
+      SERVER_NAME: kibana.example.org
+      ELASTICSEARCH_HOSTS: http://{DOMAIN_NAME}-elasticsearch:9200
+      VIRTUAL_HOST : ${VIRTUAL_HOST_KIBANA}
+      VIRTUAL_PORT: 5601
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    ports:
+      - "${KIBANA_PORT}:5601"
+    depends_on:
+      - {DOMAIN_NAME}-elasticsearch
+
+  #######################################
+  # Logstash
+  #######################################
+  {DOMAIN_NAME}-logstash:
+    container_name: {DOMAIN_NAME}-logstash
+    build: 
+      context: logstash/
+      dockerfile: Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    environment:
+      discovery.seed_hosts: logstash
+      LS_JAVA_OPTS: "-Xms512m -Xmx512m"
+      VIRTUAL_HOST : ${VIRTUAL_HOST_LOGSTASH}
+      VIRTUAL_PORT: 9600
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+    ports:
+      - "${LOGSTASH_PORT}:9600"
+    depends_on:
+      - {DOMAIN_NAME}-elasticsearch
+
+networks:
+  default:
+    name: dockerwp
+    external: true
+
+volumes:
+  {DOMAIN_NAME}-elasticsearch_data:
