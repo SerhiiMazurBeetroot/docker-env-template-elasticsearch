@@ -20,7 +20,7 @@ services:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
       - {DOMAIN_NAME}-elasticsearch_data:/usr/share/elasticsearch/data:Z
     ports:
-      - "${ELASTIC_PORT}:9200"
+      - "${ELASTIC_PORT}:9300"
     restart: always
 
   #######################################
@@ -34,10 +34,7 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     environment:
-      SERVER_NAME: kibana.example.org
       ELASTICSEARCH_HOSTS: http://{DOMAIN_NAME}-elasticsearch:9200
-      VIRTUAL_HOST : ${VIRTUAL_HOST_KIBANA}
-      VIRTUAL_PORT: 5601
     volumes:
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
@@ -58,8 +55,6 @@ services:
     environment:
       discovery.seed_hosts: logstash
       LS_JAVA_OPTS: "-Xms512m -Xmx512m"
-      VIRTUAL_HOST : ${VIRTUAL_HOST_LOGSTASH}
-      VIRTUAL_PORT: 9600
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
