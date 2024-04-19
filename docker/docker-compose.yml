@@ -41,6 +41,7 @@ services:
       - "${KIBANA_PORT}:5601"
     depends_on:
       - {DOMAIN_NAME}-elasticsearch
+    restart: always
 
   #######################################
   # Logstash
@@ -62,6 +63,7 @@ services:
       - "${LOGSTASH_PORT}:9600"
     depends_on:
       - {DOMAIN_NAME}-elasticsearch
+    restart: always
 
 networks:
   default:
